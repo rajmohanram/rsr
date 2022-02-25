@@ -1,0 +1,36 @@
+---
+version: "3"
+
+services:
+  minio:
+    container_name: minio
+    hostname: minio
+    image: minio/minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "password"
+      MINIO_KMS_SECRET_KEY: "minio-encryption-key:m4XWjcw0b8OdTXXSLLdYCi4dKeREoyI0p8gOOCKXYfo="
+    extra_hosts:
+      minio1: 192.168.0.30
+    network_mode: host
+    volumes:
+      - ./disk1:/disk1
+      - ./disk2:/disk2
+      - ./disk3:/disk3
+      - ./disk4:/disk4
+    command: server http://minio1/disk{1...4} --address 192.168.0.30:9000
+
+  minio-console:
+    container_name: minio-console
+    hostname: minio-console
+    image: minio/console
+    restart: unless-stopped
+    environment:
+      CONSOLE_PBKDF_PASSPHRASE: "c3RvcmFkbWluCg"
+      CONSOLE_PBKDF_SALT: "c3RvcmFkbWluCg"
+      CONSOLE_MINIO_SERVER: http://192.168.0.30:9000
+    command: ["server"]
+    extra_hosts:
+      minio1: 192.168.0.30
+    network_mode: host
