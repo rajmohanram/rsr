@@ -1,0 +1,76 @@
+mvdckubern5.cidr.gov.in         10.66.204.213               DONE
+
+mndckubern11.cidr.gov.in        10.66.204.167               DONE
+mndckubern12.cidr.gov.in        10.66.204.168               DONE
+mndckubern13.cidr.gov.in        10.66.204.169               Done
+mndckubern14.cidr.gov.in        10.66.204.171               DONE
+mndckubern15.cidr.gov.in        10.66.204.172               DONE
+mndckubern16.cidr.gov.in        10.66.204.173               DONE (MNDC harbor - connection refused)
+mndckubern17.cidr.gov.in        10.66.204.174               DONE
+mndckubern18.cidr.gov.in        10.66.204.175               DONE
+
+
+
+mvdcstgcuber8.cidr.gov.in       10.66.204.188
+mvdcstgcuber9.cidr.gov.in       10.66.204.189
+mvdcstgcuber10.cidr.gov.in      10.66.204.190
+mvdcstgcuber11.cidr.gov.in      10.66.204.191
+mvdcstgcuber12.cidr.gov.in      10.66.204.192
+mvdcstgcuber13.cidr.gov.in      10.66.204.193
+mvdcstgcuber14.cidr.gov.in      10.66.204.195
+mvdcstgcuber15.cidr.gov.in      10.66.204.196
+mvdcstgcuber16.cidr.gov.in      10.66.204.197
+mvdcstgcuber17.cidr.gov.in      10.66.204.198
+
+
+
+
+
+
+--- VM
+mvdckubern6.cidr.gov.in
+mvdckubern7.cidr.gov.in
+mvdckubern8.cidr.gov.in
+mvdckubern9.cidr.gov.in
+mvdckubern10.cidr.gov.in
+
+
+
+
+
+
+mndckubern11.cidr.gov.in     Ready                      <none>   478d   v1.16.3   10.66.204.167   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern12.cidr.gov.in     Ready,SchedulingDisabled   <none>   478d   v1.16.3   10.66.204.168   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern13.cidr.gov.in     Ready                      <none>   454d   v1.16.3   10.66.204.169   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern14.cidr.gov.in     Ready                      <none>   478d   v1.16.3   10.66.204.171   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern15.cidr.gov.in     Ready,SchedulingDisabled   <none>   478d   v1.16.3   10.66.204.172   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern16.cidr.gov.in     Ready,SchedulingDisabled   <none>   477d   v1.16.3   10.66.204.173   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern17.cidr.gov.in     Ready                      <none>   477d   v1.16.3   10.66.204.174   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mndckubern18.cidr.gov.in     Ready                      <none>   477d   v1.16.3   10.66.204.175   <none>        Red Hat Enterprise Linux   3.10.0-1127.13.1.el7.x86_64   docker://18.9.6
+mvdckubern10.cidr.gov.in     Ready                      <none>   539d   v1.16.3   10.66.204.218   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdckubern5.cidr.gov.in      Ready                      master   539d   v1.16.3   10.66.204.213   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdckubern6.cidr.gov.in      Ready                      <none>   193d   v1.16.3   10.66.204.214   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdckubern7.cidr.gov.in      NotReady                   <none>   539d   v1.16.3   10.66.204.215   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdckubern8.cidr.gov.in      Ready                      <none>   193d   v1.16.3   10.66.204.216   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdckubern9.cidr.gov.in      Ready                      <none>   193d   v1.16.3   10.66.204.217   <none>        Red Hat Enterprise Linux   3.10.0-957.27.2.el7.x86_64    docker://18.9.6
+mvdcstgcuber10.cidr.gov.in   Ready                      <none>   25h    v1.16.3   10.66.204.190   <none>        Red Hat Enterprise Linux   3.10.0-1160.11.1.el7.x86_64   docker://18.9.6
+mvdcstgcuber8.cidr.gov.in    Ready                      <none>   25h    v1.16.3   10.66.204.188   <none>        Red Hat Enterprise Linux   3.10.0-1160.11.1.el7.x86_64   docker://18.9.6
+
+
+
+
+
+
+
+mvdckubern6.cidr.gov.in       10.66.204.214  
+mvdckubern7.cidr.gov.in       10.66.204.215  
+mvdckubern8.cidr.gov.in       10.66.204.216  
+mvdckubern9.cidr.gov.in       10.66.204.217  
+mvdckubern10.cidr.gov.in      10.66.204.218  
+
+
+
+
+
+
+
