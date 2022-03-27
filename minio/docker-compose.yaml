@@ -5,18 +5,18 @@ services:
   minio:
     container_name: minio
     hostname: minio
-    image: minio/minio
+    image: harbor-registry-mndc.uidai.gov.in/kube-platform/minio/minio:latest
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "password"
+      MINIO_ROOT_PASSWORD: "devops@123"
       MINIO_KMS_SECRET_KEY: "minio-encryption-key:m4XWjcw0b8OdTXXSLLdYCi4dKeREoyI0p8gOOCKXYfo="
     extra_hosts:
-      minio1: 192.168.0.30
+      minio1: 10.66.204.213
     network_mode: host
     volumes:
       - ./disk1:/disk1
       - ./disk2:/disk2
       - ./disk3:/disk3
       - ./disk4:/disk4
-    command: server http://minio1/disk{1...4} --address 192.168.0.30:9000 --console-address 192.168.0.30:9001
+    command: server http://minio1/disk{1...4} --address 10.66.204.213:8080 --console-address 10.66.204.213:80
