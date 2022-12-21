@@ -1,0 +1,270 @@
+pipeline {
+    agent any
+    parameters {
+       gitParameter branchFilter: 'origin/(.*)', defaultValue: 'release', name: 'BUILD_BRANCH', type: 'PT_BRANCH'
+         }
+     
+    environment{
+        scannerHome = tool 'SonarQubeScanner'
+		IMAGETAG = "harbor-registry-mndc.uidai.gov.in/appointment-portal/token-management-service"
+		APPLICATION_NAME="token-management-service"
+        RELEASE_TYPE="New-Release"
+		JOB_TYPE="CI"
+        STAGE_FLAG="N"
+        PROD_FLAG="N"
+		MANDATORY_FILE="README.md"
+		FPR_FILE="token-management-service.fpr"
+		
+              
+    }
+	
+    stages {
+       stage ('1-Repository-Clone') { 
+            steps {
+                script {
+                    git branch: "${params.BUILD_BRANCH}", url:'http://10.66.200.23:7990/scm/ux/token-management-service.git', credentialsId:'BitbucketID'
+                }
+            }
+        }
+		stage ('2-Verification') {
+            steps {
+                script {
+				      env.BUILD_FLAG = sh(script: 'sh ${autopath}/filecheck/filecheck.sh ${JOB_NAME}/${MANDATORY_FILE}', returnStdout: true).trim()
+					  if ( env.BUILD_FLAG == 'N'){
+					    currentBuild.result = 'FAILURE'
+					    sh 'echo "[FAILURE]: Mandatory File ${MANDATORY_FILE} is not Present , Aborting Build"'  
+					   }else{
+					    sh 'echo "[SUCESS]: Mandatory File ${MANDATORY_FILE} is Present , Continuing Build"' 						
+						} 
+					  
+                                        
+                }
+            }
+        }
+	  stage ('3-Pre-build') {
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                script {
+				   
+				sh  'cp -r ${RESOURCE_DIR}/token-management-service/* .'
+                    
+                }
+            }
+        } 
+		
+      	stage ('4-FortifyClean') {
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                script {
+                    fortifyClean addJVMOptions: '', buildID: '1', logFile: '', maxHeap: ''
+                }
+            }
+        }
+		stage ('5-FortifyTranslate') {
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                 script {
+                    fortifyTranslate addJVMOptions: '', buildID: '1', excludeList: '**/test/*', logFile: '', maxHeap: '', projectScanType: fortifyJava(javaAddOptions: '', javaClasspath: '', javaSrcFiles: '**/*.java', javaVersion: '8')
+               }
+            }
+        }
+		stage ('6-FortifyScan') {
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                script {
+                    fortifyScan addJVMOptions: '', addOptions: '', buildID: '1', customRulepacks: '', logFile: '', maxHeap: '', resultsFile: 'token-management-service.fpr'
+                }
+            }
+        }
+		stage ('7-Uploadssc') {
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                script {
+                    fortifyUpload appName: 'token-management-service', appVersion: '0.0.1-SNAPSHOT', failureCriteria: '', filterSet: '', pollingInterval: '', resultsFile: 'token-management-service.fpr'
+                }
+            }
+        }
+		stage ('8- Fortify Report Generation'){
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+			steps {
+				script {
+					sh 'BIRTReportGenerator -template "Developer Workbook" -source token-management-service.fpr -format PDF -output fortify-scan-report.pdf -showSuppressed -UseFortifyPriorityOrder'
+				}
+			}
+		}
+		stage ('9- Fortify Validation'){
+		when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+			steps {
+				script {
+				env.FORTIFY_VALIDATION_FLAG = sh(script: 'sh ${autopath}/fortify/fortify-validator.sh ${JOB_NAME} ${FPR_FILE}', returnStdout: true).trim()
+					  if ( env.FORTIFY_VALIDATION_FLAG == 'F'){
+					    currentBuild.result = 'FAILURE'
+					    sh '${autopath}/error-handler/error-handler.sh fortify'  
+					   }else{
+					    sh 'echo "[INFO] : FORTIFY VALIDATION IS PASSED, CONTINUING BUILD"' 						
+					}
+				}
+			}
+		}
+		stage ('10-Maven-Package') {
+		when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+		   	tools {
+                   jdk "jdk_17.0.2"
+                }
+            steps {
+                script {
+                    
+                    sh 'mvn package spring-boot:repackage'
+                }
+            }
+        } 
+		stage ('11-SonarQube-scan') {
+		when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+		   
+            steps {
+                script {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+		stage ('12-Building-Docker-Image') {
+		when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+            steps {
+                script {
+				    env.VERSION = sh(script: 'cd ${autopath};./autoversion.sh ${JOB_NAME}', returnStdout: true).trim()
+                    dockerImage=docker.build IMAGETAG + ":" + VERSION
+                }
+            }
+        }
+		stage ('13-Push-Image-To-Harbor') {
+		when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+            steps {
+                script {
+                    docker.withRegistry(harborURL,'HarborID'){
+					dockerImage.push()
+					}
+                }
+            }
+        }
+	    stage ('14-Remove-Local-Image') {
+		when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+            steps {
+                script {
+                     
+                     sh' docker rmi $IMAGETAG:$VERSION'
+
+                      
+                }
+            }
+        }
+	   stage ('15-Devops-Tracker-update') {
+		 when {
+		      expression {env.FORTIFY_VALIDATION_FLAG == 'P'}
+		   }
+            steps {
+                script {
+				
+                    env.IMAGE="${IMAGETAG + ':' + VERSION}"
+				    sh 'sh ${DEVOPS_TRACKER_UPDATE} ${APPLICATION_NAME} ${VERSION} ${RELEASE_TYPE} ${JOB_TYPE} ${IMAGE} ${STAGE_FLAG} ${PROD_FLAG}'
+                    
+                }
+            }
+		}
+	}
+post {  
+          
+           success {  
+            
+					emailext (
+					subject: "Notification from Jenkins Job - '${env.JOB_NAME} | Build Success",
+					mimeType: 'text/html',
+					attachmentsPattern: '*.pdf, Readme.*',
+					from: 'noreply@uidai.net.in',
+					to: 'devopsteam@uidai.net.in, developer.sairavi@uidai.net.in, arch1.re.msap@uidai.net.in, productmanager.re.msap@uidai.net.in',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server.Please don't reply all</p>
+							 <p>Docker Image ${env.IMAGETAG}:${env.VERSION} has been successfully built by Jenkins Job - ${env.JOB_NAME} and pushed to Harbor Registry - ${env.harborURL}, It is now readily available for deployment.</p>
+							 <p>Below source code scans were performed and the results were uploaded into their respective portals</p>
+							 <br><br>
+							 
+							 1. SonarQube Code Quality Analyser (URL: http://10.66.100.31:9000/dashboard?id=org.uidai%3AuserManagement)<br>
+							 2. Fortify Static Code Analyser (URL: http://10.66.100.23:8080/ssc)
+							 							 
+							 <br><br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)			
+			}
+		 
+           failure {  
+                sh 'rm -rf buildlogs.txt'
+                sh 'curl -u cicdviewer:cicdviewer@123  ${BUILD_URL}/consoleText -o ./buildlogs.txt' 
+				emailext (
+					subject: "Notification from Jenkins Job - ${env.JOB_NAME} | Build Failure",
+					mimeType: 'text/html',
+					attachmentsPattern: 'buildlogs.*',
+					from: 'noreply@uidai.net.in',
+					to: 'msap.devopsteam@uidai.net.in, tcsdeveloper.dolan@uidai.net.in, developer.sairavi@uidai.net.in, harishj.tcs@uidai.net.in, sagarsingh.tcs@uidai.net.in, arch1.re.msap@uidai.net.in, productmanager.re.msap@uidai.net.in',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server.Please don't reply all</p>
+							 <p>Jenkins job : ${env.JOB_NAME} : ${env.BUILD_ID}  is failed. Please check the attached error logs</p>
+							 <br><br>
+							 
+							
+							 							 
+							 <br><br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)			
+			}
+		  
+           unstable {
+            sh 'rm -rf buildlogs.txt'
+            sh 'curl -u cicdviewer:cicdviewer@123  ${BUILD_URL}/consoleText -o ./buildlogs.txt' 
+            emailext (
+					subject: "Notification from Jenkins Job - ${env.JOB_NAME} | Build Unstable",
+					mimeType: 'text/html',
+					attachmentsPattern: 'buildlogs.*',
+					from: 'noreply@uidai.net.in',
+					to: 'msap.devopsteam@uidai.net.in, tcsdeveloper.dolan@uidai.net.in, developer.sairavi@uidai.net.in, harishj.tcs@uidai.net.in, sagarsingh.tcs@uidai.net.in, arch1.re.msap@uidai.net.in, productmanager.re.msap@uidai.net.in',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server.Please don't reply all</p>
+							 <p>Jenkins job : ${env.JOB_NAME} : ${env.BUILD_ID}  is failed. Please check the attached error logs</p>
+							 <br><br>
+							 
+							
+							 							 
+							 <br><br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)			
+			}
+	    } 
+}

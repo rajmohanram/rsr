@@ -1,0 +1,166 @@
+pipeline {
+    agent any
+	
+        environment{
+        scannerHome = tool 'SonarQubeScanner'
+		App_Name= "cache-service"
+        Nexus_Base_repo="uidai-artifactory"
+        Nexus_target_primary_repo="in/gov/uidai/cache-service/"
+		MANDATORY_FILE="README.md"
+		BUILD_FLAG="Y"	
+		}
+	
+    stages {
+        stage ('1-Repository-Clone') {
+            steps {
+                script {
+                    git (url:'http://10.66.200.23:7990/scm/ux/cache-service.git', branch: 'release', credentialsId:'BitbucketID')		
+				}        
+            }
+        }
+        stage ('1b-Log4j validation'){
+	   steps {
+	   script {
+	           env.LOG4J_FLAG = sh(script: 'sh ${autopath}/log4j-validator/log4j-validator-1.0.sh ${LOG4J_UPPER_LMT} ${LOG4J_LOWER_LMT} ${JOB_NAME} ', returnStdout: true).trim()                 
+		             if ( env.LOG4J_FLAG== 'N'){
+					    currentBuild.result = 'FAILURE'
+					    sh 'echo "[ERROR]: Log4j version is incompliant. log4j versions in between ${LOG4J_LOWER_LMT} to ${LOG4J_UPPER_LMT} are not allowed , Aborting Build"'  
+					   }else{
+					    sh 'echo "[INFO]: Log4j version is compliant, Continuing Build"' 						
+						} 
+						}
+						}
+	}
+		stage ('2-Verification') {
+		    when {
+		      expression {env.LOG4J_FLAG == 'Y'}
+		   }
+            steps {
+                script {
+				      env.BUILD_FLAG = sh(script: 'sh ${autopath}/filecheck/filecheck.sh ${JOB_NAME}/${MANDATORY_FILE}', returnStdout: true).trim()
+					  if ( env.BUILD_FLAG == 'N'){
+					    currentBuild.result = 'FAILURE'
+					    sh 'echo "[FAILURE]: Mandatory File ${MANDATORY_FILE} is not Present , Aborting Build"'  
+					   }else{
+					    sh 'echo "[SUCESS]: Mandatory File ${MANDATORY_FILE} is Present , Continuing Build"' 						
+						} 
+					  
+                                        
+                }
+            }
+        }
+		
+		stage ('9-Maven-Build') {
+		     tools {
+                   jdk "jdk_17.0.2"
+                }
+		     
+            steps {			  
+                script {
+                    sh 'mvn install'
+                }
+            }
+	    }
+				stage ('12-NEXUS-Publish-Prepration') {
+			 when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+		   
+		     
+             steps {			  
+                script {
+				env.VERSION = sh(script: 'cd ${autopath};./autoversion.sh ${JOB_NAME}', returnStdout: true).trim()
+                env.LIB_JAR="${App_Name + '-' + VERSION + '.jar'}" 
+		        env.LIB_POM="${App_Name + '-' + VERSION + '.pom'}"
+				env.Nexus_target_repo="${Nexus_target_primary_repo + VERSION }"
+                }
+            }
+        }
+         stage ('13-Publish JAR to Nexus') {
+		 	 when {
+		      expression {env.BUILD_FLAG == 'Y'}
+		   }
+            steps {
+                     withCredentials([
+                            usernamePassword(credentialsId: 'NexusID', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
+                            script{
+                                
+                                sh "cd /var/lib/jenkins/workspace/Resident-Experience-Track/cache-service/target;curl -u \${USERNAME}:\${PASSWORD} --upload-file ./\${LIB_JAR} http://10.66.100.29:8081/repository/${Nexus_Base_repo}/${Nexus_target_repo}/${LIB_JAR} -v"
+								sh "cd /var/lib/jenkins/workspace/Resident-Experience-Track/cache-service;curl -u \${USERNAME}:\${PASSWORD} --upload-file ./pom.xml http://10.66.100.29:8081/repository/${Nexus_Base_repo}/${Nexus_target_repo}/${LIB_POM} -v"
+                             }
+                     }
+                 }
+             }
+    }
+	/*	 post {  
+          
+         success {  
+            
+				emailext (
+					subject: "Notification from Jenkins Job - ${env.JOB_NAME} | Build Success",
+					mimeType: 'text/html',
+					from: 'noreply@uidai.net.in',
+					to: 'rajasekarr.tcs@uidai.net.in',
+					attachmentsPattern: '*.pdf',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server. The artifact has been successfully built by a Jenkins Job - '${env.JOB_NAME}' : '#${env.BUILD_NUMBER}' and pushed to NEXUS REPO - '${env.NEXUS_REPO}'. It is now readily available for deployment.</p>
+							 
+							 <p>Below source code scans were performed and the results were uploaded into their respective portals</p>
+							 <br>							 
+							 1. SonarQube Code Quality Analyser (URL: http://10.66.100.31:9000/dashboard?id=${JOB_BASE_NAME})<br>
+							 2. Fortify Static Code Analyser (URL: http://10.66.100.23:8080/ssc) and report attached.
+							 							 
+							 <br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)		
+			}
+		 
+         failure {  
+                sh 'rm -rf buildlogs.txt'
+                sh 'curl -u cicdviewer:cicdviewer@123  ${BUILD_URL}/consoleText -o ./buildlogs.txt' 
+				emailext (
+					subject: "Notification from Jenkins Job - ${env.JOB_NAME} | Build Failure",
+					mimeType: 'text/html',
+					attachmentsPattern: 'buildlogs.*',
+					from: 'noreply@uidai.net.in',
+					to: 'rajasekarr.tcs@uidai.net.in',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server.Please don't reply all</p>
+							 <p>Jenkins job : ${env.JOB_NAME} : ${env.BUILD_ID}  is failed. Please check the attached error logs</p>
+							 <br><br>
+							 
+							
+							 							 
+							 <br><br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)			
+			}
+		  
+         unstable {
+            sh 'rm -rf buildlogs.txt'
+            sh 'curl -u cicdviewer:cicdviewer@123  ${BUILD_URL}/consoleText -o ./buildlogs.txt' 
+            emailext (
+					subject: "Notification from Jenkins Job - ${env.JOB_NAME} | Build Unstable",
+					mimeType: 'text/html',
+					attachmentsPattern: 'buildlogs.*',
+					from: 'noreply@uidai.net.in',
+					to: 'rajasekarr.tcs@uidai.net.in',
+					body: """<p>Hi All,</p>
+							 <p>This is an auto generated notification mail from Jenkins server.Please don't reply all</p>
+							 <p>Jenkins job : ${env.JOB_NAME} : ${env.BUILD_ID}  is failed. Please check the attached error logs</p>
+							 <br><br>
+							 
+							
+							 							 
+							 <br><br>
+							 With Regards,<br>
+							 CIDR DevOps Team<br>
+							 UIDAI Technology Center"""
+				)			
+			}
+		} */
+}
