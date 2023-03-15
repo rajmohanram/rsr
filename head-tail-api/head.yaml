@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: head-api
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: head-api
+      version: v0.1
+  template:
+    metadata:
+      labels:
+        app: head-api
+        version: v0.1
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - head-api
+            topologyKey: kubernetes.io/hostname
+      containers:
+        - name: head-api
+          image: rajmor/demo-head-api:v0.1
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DELAY_MS
+              value: "600"
+            - name: TAIL_URL
+              value: "service-tail.default.svc.local"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: head-api
+  name: service-head
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 8000
+    protocol: TCP
+    appProtocol: HTTP
+    targetPort: 8000
+  selector:
+    app: head-api
+  type: ClusterIP

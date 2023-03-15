@@ -1,0 +1,49 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: head-api-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - 192.168.128.121
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: head-api
+  namespace: default
+spec:
+  gateways:
+  - head-api-gateway
+  hosts:
+  - 192.168.128.121
+  http:
+  - match:
+    - uri:
+        prefix: /api/data
+    route:
+    - destination:
+        host: service-tail.default.svc.cluster.local
+        port:
+          number: 8000
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: head-api
+spec:
+  host: service-tail.default.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_REQUEST
+    tls:
+      mode: DISABLE
+
