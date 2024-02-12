@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: keycloak
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          # image: rajmor/keycloak-client-auth:v23.0.6
+          image: quay.io/keycloak/keycloak:23.0.6
+          args: ["start-dev"]
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "admin"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            # - name: KC_HOSTNAME
+            #   value: "argocd.uidai.net.in"
+            # - name: KC_HOSTNAME_PORT
+            #   value: "32203"
+            # - name: KC_HOSTNAME_URL
+            #   value: "http://argocd.uidai.net.in:32203/sso/"
+            # - name: KC_PROXY
+            #   value: "edge"
+            # - name: KC_HTTP_ENABLED
+            #   value: "true"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: "/sso"
+            # - name: KC_LOG_LEVEL
+            #   value: "debug"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /sso/realms/master
+              port: 8080
+
+
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: argocd.uidai.net.in
+      http:
+        paths:
+          - path: /sso
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080
