@@ -1,0 +1,40 @@
+---
+# Source: jenkins/templates/jenkins-controller-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-controller
+  namespace: jenkins
+  labels:
+    "app.kubernetes.io/name": "jenkins"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: agent-listener
+      port: 50000
+      targetPort: 50000
+  selector:
+    "app.kubernetes.io/component": "jenkins-controller"
+    "app.kubernetes.io/instance": "jenkins"
+  type: ClusterIP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jenkins-controller
+  namespace: jenkins
+spec:
+  entryPoints:
+  - web
+  routes:
+  - kind: Rule
+    match: Host(`jenkins.cnalabs.com`)
+    services:
+    - kind: Service
+      name: jenkins-controller
+      namespace: jenkins
+      port: 8080
