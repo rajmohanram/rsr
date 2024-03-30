@@ -1,0 +1,5 @@
+# /etc/rancher/k3s/registries.yaml
+mirrors:
+  harbor-nonprod.uidai.net.in:
+    endpoint:
+      - "http://harbor-nonprod.uidai.net.in:80"

@@ -8,9 +8,9 @@ metadata:
     "app.kubernetes.io/instance": "jenkins"
     "app.kubernetes.io/component": "jenkins-controller"
 spec:
-  storageClassName: local-path
+  storageClassName: nfs-client
   accessModes:
-    - "ReadWriteOnce"
+    - "ReadWriteMany"
   resources:
     requests:
       storage: "10Gi"
