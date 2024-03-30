@@ -1,0 +1,17 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mvn-local-repo-pvc
+  namespace: jenkins
+  labels:
+    "app.kubernetes.io/name": "jenkins"
+    "app.kubernetes.io/instance": "jenkins"
+    "app.kubernetes.io/component": "jenkins-controller"
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - "ReadWriteMany"
+  resources:
+    requests:
+      storage: "10Gi"
+---

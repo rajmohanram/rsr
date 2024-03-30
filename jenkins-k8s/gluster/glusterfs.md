@@ -64,7 +64,7 @@ EXPORT {
     }
     Access_type = RW;
     Squash="No_root_squash";
-    Disable_ACL = FALSE;
+    Disable_ACL = TRUE;
     Pseudo = "/jenkins_vol";
     Protocols = "3","4" ;
     Transports = "UDP","TCP" ;
