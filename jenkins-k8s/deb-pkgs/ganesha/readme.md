@@ -1,4 +1,11 @@
 # focal > nfs-ganesha-gluster
+
+cd /tmp/deb-pkgs/ganesha
+
+systemctl stop nfs-ganesha
+dpkg -l | grep ganesha
+
+
 dpkg -i libc-bin_2.35-0ubuntu3.6_amd64.deb
 dpkg -i libc6_2.35-0ubuntu3.6_amd64.deb
 dpkg -i libssl3_3.0.2-0ubuntu1.15_amd64.deb
@@ -25,3 +32,12 @@ dpkg -i libevent-core-2.1-7_2.1.12-stable-1build3_amd64.deb
 dpkg -i nfs-common_1%3a2.6.1-1ubuntu1.2_amd64.deb
 dpkg -i nfs-ganesha_3.5-1ubuntu1_amd64.deb
 dpkg -i nfs-ganesha-gluster_3.5-1ubuntu1_amd64.deb
+
+
+dpkg -l | grep ganesha
+
+cat /etc/ganesha/ganesha.conf
+
+systemctl enable --now nfs-ganesha
+systemctl start nfs-ganesha
+systemctl status nfs-ganesha
