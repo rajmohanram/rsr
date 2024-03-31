@@ -14,5 +14,8 @@ parameters:
   pathPattern: "${.PVC.namespace}-${.PVC.name}"
 mountOptions: 
   - nfsvers=3
-  - rsize=32768
-  - wsize=32768
+  - hard
+  - rsize=1048576
+  - wsize=1048576
+  - noresvport
+
