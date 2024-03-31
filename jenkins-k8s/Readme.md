@@ -5,8 +5,11 @@
 
 # Setus GlusterFS
 jenkins_vol     replica 3   /data/jenkins
+mkdir /jenkins_vol
 
-# Setup Ganesha-NFS
+/etc/fstab
+localhost:/jenkins_vol /jenkins_vol glusterfs	defaults	0	0
+
 
 
 # Setup K3s
