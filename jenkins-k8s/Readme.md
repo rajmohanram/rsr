@@ -13,21 +13,27 @@ localhost:/jenkins_vol /jenkins_vol glusterfs	defaults	0	0
 
 
 # Setup K3s
-sudo mkdir -p /var/lib/rancher/k3s/agent/images/
+mkdir -p /var/lib/rancher/k3s/agent/images/
 
 cp k3s-airgap-images-arm64.tar.zst /var/lib/rancher/k3s/agent/images/
 
-install k3s /usr/local/bin/k3s
+install k3s-arm64 /usr/local/bin/k3s
 
 chmod +x install.sh
 
-K3S_KUBECONFIG_MODE="644" INSTALL_K3S_SKIP_DOWNLOAD=true INSTALL_K3S_EXEC="server --cluster-cidr='10.32.0.0/16' --service-cidr='10.96.0.0/16'" ./install.sh
+K3S_KUBECONFIG_MODE="644" INSTALL_K3S_SKIP_DOWNLOAD=true INSTALL_K3S_EXEC="server --disable=local-storage --cluster-cidr='10.32.0.0/16' --service-cidr='10.96.0.0/16'" ./install.sh
 
 kubectl label nodes jenkins-k8s svccontroller.k3s.cattle.io/enablelb=true
 
 Change web exposed port to 8080
 
 Apply ingressroute for Traefik Dashboard
+
+# Join worker node
+cat /var/lib/rancher/k3s/server/token
+
+INSTALL_K3S_SKIP_DOWNLOAD=true K3S_URL=https://192.168.0.11:6443 K3S_TOKEN=K1096ea22129562880bc73916b886170c30dc940b38add7880d0057a63076fb046e::server:f005fc2e5f58794ec0b31d2ff52066af ./install.sh
+
 
 # Setup NFS provisioner
 k apply -f rbac.yaml -f storageclass.yaml

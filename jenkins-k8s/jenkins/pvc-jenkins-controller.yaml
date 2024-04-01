@@ -8,10 +8,10 @@ metadata:
     "app.kubernetes.io/instance": "jenkins"
     "app.kubernetes.io/component": "jenkins-controller"
 spec:
-  storageClassName: local-path
+  storageClassName: longhorn
   accessModes:
     - "ReadWriteMany"
   resources:
     requests:
-      storage: "10Gi"
+      storage: "5Gi"
 ---
