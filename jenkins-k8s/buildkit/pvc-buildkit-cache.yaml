@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: buildkit-cache-pvc
+  namespace: buildkit
+  labels:
+    app: buildkitd
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - "ReadWriteMany"
+  resources:
+    requests:
+      storage: "1Gi"
+---
