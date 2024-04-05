@@ -21,7 +21,7 @@ install k3s-arm64 /usr/local/bin/k3s
 
 chmod +x install.sh
 
-K3S_KUBECONFIG_MODE="644" INSTALL_K3S_SKIP_DOWNLOAD=true INSTALL_K3S_EXEC="server --disable=local-storage --cluster-cidr='10.32.0.0/16' --service-cidr='10.96.0.0/16'" ./install.sh
+K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="server --disable=traefik --cluster-cidr='10.32.0.0/16' --service-cidr='10.96.0.0/16'" ./install.sh
 
 kubectl label nodes jenkins-k8s svccontroller.k3s.cattle.io/enablelb=true
 

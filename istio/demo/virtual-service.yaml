@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: dump-header
+  namespace: istio-demo
+spec:
+  hosts:
+  - "dump-header.cnalabs.com"
+  gateways:
+  - istio-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: dump-header
+        port:
+          number: 5000
