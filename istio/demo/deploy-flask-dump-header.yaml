@@ -18,6 +18,7 @@ spec:
       containers:
         - name: dump-header
           image: rajmor/flask-dump-headers:v0.1
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 5000
