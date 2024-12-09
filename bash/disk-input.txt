@@ -1,0 +1,11 @@
+Filesystem                     Type      Size  Used Avail Use% Mounted on
+tmpfs                          tmpfs      26G   12M   26G   1% /run
+/dev/mapper/vg00-root          xfs        91G  2.8G   88G   4% /
+/dev/sdl2                      xfs       4.0G  328M  3.7G   9% /boot
+/dev/mapper/vg00-home          xfs       5.0G   68M  4.9G   2% /home
+/dev/sdl1                      vfat      2.0G  7.1M  2.0G   1% /boot/efi
+/dev/mapper/vg00-tmp           ext4       5.0G   68M  4.9G   2% /tmp
+/dev/mapper/vg00-var           ext4       261G  3.7G  258G   2% /var
+/dev/mapper/vg00-var_tmp       ext4       2.0G   47M  1.9G   3% /var/tmp
+/dev/mapper/vg00-var_log       ext4        91G  2.5G   88G   3% /var/log
+/dev/mapper/vg00-var_log_audit ext4       2.0G  269M  1.7G  14% /var/log/audit
