@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBOM RHEL9 SOE</title>
+    <title>Vulnerability Report RHEL9 SOE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- DataTables CSS -->
@@ -14,6 +14,28 @@
     
     <!-- DataTables JS -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        .links a,
+        .links[data-more-links=on] a {
+            display: block;
+        }
+        .links[data-more-links=off] a:nth-of-type(1n+5) {
+            display: none;
+        }
+        .severity-critical {
+            background-color: #ffcccc;
+        }
+        .severity-high {
+            background-color: #ff9999;
+        }
+        .severity-medium {
+            background-color: #ffcc99;
+        }
+        .severity-low {
+            background-color: #ffff99;
+        }
+    </style>
 
 </head>
 <body class="p-5">
@@ -44,35 +66,48 @@
             <polyline class="cls-1" points="32 0 64 32 32 64 0 32 32 0"/>
             <polygon class="cls-2" points="44.15 35.24 32 64 32 64 64 32 55.69 23.68 44.15 35.24"/>
         </svg>
-        <h2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SBOM Report: RHEL9 SOE (rhel-9.4-x86_64-20250220-ee0fde0)</h2>
+        <h2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RHEL9 SOE (rhel-9.4-x86_64-20250220-ee0fde0) Vulnerability Scan Report</h2>
     </div>
     <div>
-        <p>A Software Bill of Materials (SBOM) is a detailed inventory that lists all the components, libraries, and dependencies included in a software product, along with their versions and licenses. It helps organizations ensure transparency, security, and compliance by providing visibility into open-source and third-party software used in applications. In the context of Red Hat Enterprise Linux (RHEL), SBOMs are increasingly important for tracking the security and compliance of system components, as RHEL integrates numerous open-source packages. This enables RHEL users to quickly identify vulnerabilities, manage risks, and meet regulatory requirements by auditing and monitoring software components.</p>
+        <p>This report presents a detailed analysis of the security vulnerabilities found within the RHEL9 SOE using Trivy Vulnerability scanner. It highlights identified issues, including outdated packages and potential security risks across the system's software components. The report categorises vulnerabilities by their severity-critical, high and medium, and provides relevant information such as affected package versions and associated CVEs.</p>
     </div>
+    
 
     <!-- DataTable Wrapper -->
     <div class="mt-5">
         <table id="example" class="display">
+        {{- range . }}
             <thead>
                 <tr>
-                    <th>Artifact Id</th>
-                    <th>Name</th>
-                    <th>Version</th>
-                    <th>Type</th>
-                    <th>Found by</th>
+                    <th>Package</th>
+                    <th>Vulnerability ID</th>
+                    <th>Severity</th>
+                    <th>Installed Version</th>
+                    <th>Fixed Version</th>
+                    <th>Links</th>
                 </tr>
             </thead>
             <tbody>
-                {{- range .artifacts}}
+                {{- if (eq (len .Vulnerabilities) 0) }}
+                <tr><th colspan="6">No Vulnerabilities found</th></tr>
+                {{- else }}
+                {{- range .Vulnerabilities }}
                 <tr>
-                    <td>{{.id}}</td>
-                    <td>{{.name}}</td>
-                    <td>{{.version}}</td>
-                    <td>{{.type}}</td>
-                    <td>{{.foundBy}}</td>
+                    <td>{{ escapeXML .PkgName }}</td>
+                    <td>{{ escapeXML .VulnerabilityID }}</td>
+                    <td class="severity">{{ escapeXML .Vulnerability.Severity }}</td>
+                    <td>{{ escapeXML .InstalledVersion }}</td>
+                    <td>{{ escapeXML .FixedVersion }}</td>
+                    <td class="links" data-more-links="off">
+                      {{- range .Vulnerability.References }}
+                      <a href={{ escapeXML . | printf "%q" }}>{{ escapeXML . }}</a>
+                      {{- end }}
+                    </td>
                 </tr>
-                {{- end}}
+                {{- end }}
+                {{- end }}
             </tbody>
+        {{- end }}
         </table>
     </div>
 
@@ -80,7 +115,28 @@
         // Initialize DataTable with 25 rows per page
         $(document).ready(function() {
             $('#example').DataTable({
-                "pageLength": 25
+                "pageLength": 5,
+                "lengthMenu": [ [5, 10, 25, 50, 75, 100], [5, 10, 25, 50, 75, 100] ],
+                "drawCallback": function(settings) {
+                    // Apply background color based on severity
+                    $('#example tbody tr').each(function() {
+                        var severity = $(this).find('td.severity').text().trim().toLowerCase();
+                        switch (severity) {
+                            case 'critical':
+                                $(this).find('td.severity').addClass('severity-critical');
+                                break;
+                            case 'high':
+                                $(this).find('td.severity').addClass('severity-high');
+                                break;
+                            case 'medium':
+                                $(this).find('td.severity').addClass('severity-medium');
+                                break;
+                            case 'low':
+                                $(this).find('td.severity').addClass('severity-low');
+                                break;
+                        }
+                    });
+                }
             });
         });
     </script>
